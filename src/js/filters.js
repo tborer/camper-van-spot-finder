@@ -2,7 +2,7 @@ const SIGNAL_RANK = { none: 0, weak: 1, fair: 2, strong: 3 };
 
 const Filters = (() => {
   const defaults = {
-    freeOnly: true,
+    freeOnly: false,
     showCamping: true,
     showParking: true,
     showRestAreas: true,
@@ -13,15 +13,25 @@ const Filters = (() => {
 
   let state = { ...defaults };
 
+  const SCHEMA_VERSION = 2; // bump when defaults change to reset stored state
+
   function load() {
     try {
       const saved = localStorage.getItem('vanspot_filters');
-      if (saved) state = { ...defaults, ...JSON.parse(saved) };
-    } catch { /* ignore */ }
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed._v !== SCHEMA_VERSION) {
+          console.log('[Filters] Resetting stored filters — schema version changed');
+          localStorage.removeItem('vanspot_filters');
+          return;
+        }
+        state = { ...defaults, ...parsed };
+      }
+    } catch { localStorage.removeItem('vanspot_filters'); }
   }
 
   function save() {
-    try { localStorage.setItem('vanspot_filters', JSON.stringify(state)); } catch { /* ignore */ }
+    try { localStorage.setItem('vanspot_filters', JSON.stringify({ ...state, _v: SCHEMA_VERSION })); } catch { /* ignore */ }
   }
 
   function getState() { return { ...state }; }

@@ -9,13 +9,8 @@ const IOverlander = (() => {
       lng: parseFloat(place.longitude),
       source: 'ioverlander',
       sources: ['ioverlander'],
-      free: true, // iOverlander spots are generally free/community-reported
-      facilities: {
-        toilets: false,
-        water: false,
-        dumpStation: false,
-        shower: false,
-      },
+      free: true,
+      facilities: { toilets: false, water: false, dumpStation: false, shower: false },
       stayLimitDays: null,
       notes: place.description || null,
       signalStrength: 'none',
@@ -26,14 +21,17 @@ const IOverlander = (() => {
   async function fetchSpots(bounds) {
     const { south, west, north, east } = bounds;
     const url = `${CONFIG.IOVERLANDER_BASE_URL}?latstart=${south}&latend=${north}&lonstart=${west}&lonend=${east}`;
+    console.log('[iOverlander] Fetching:', url);
     try {
       const res = await fetch(url);
-      if (!res.ok) throw new Error(`iOverlander HTTP ${res.status}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
       const json = await res.json();
       const places = Array.isArray(json) ? json : json.places || [];
-      return places.map(normalize).filter(Boolean);
+      const spots = places.map(normalize).filter(Boolean);
+      console.log(`[iOverlander] ${spots.length} spots returned`);
+      return spots;
     } catch (err) {
-      console.warn('iOverlander fetch failed (stub/API unavailable):', err.message);
+      console.warn('[iOverlander] Fetch failed (API may be unavailable or CORS-blocked):', err.message);
       return [];
     }
   }
