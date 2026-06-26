@@ -8,8 +8,32 @@ const Main = (() => {
     if (!activated) {
       activated = true;
       document.getElementById('map-prompt')?.classList.add('hidden');
-      console.log('[VanSpot] Activated — will now load spots on map moves');
+      console.log('[VanSpot] Activated — loading spots after navigation completes');
+      // Wait for flyTo animation to finish before the first fetch
+      // flyTo duration is 1.2s; poll until zoom is stable rather than hardcoding
+      waitForMapThenLoad();
     }
+  }
+
+  function waitForMapThenLoad() {
+    // Poll every 200ms until the map stops moving (flyTo animation done)
+    // then kick off the first load. Cap at 10 attempts (~2s).
+    let attempts = 0;
+    let lastZoom = MapView.getZoom();
+    const poll = setInterval(() => {
+      const zoom = MapView.getZoom();
+      const stable = zoom === lastZoom && ++attempts > 2; // stable for at least 2 checks
+      lastZoom = zoom;
+      if (stable || attempts >= 10) {
+        clearInterval(poll);
+        if (zoom >= MIN_ZOOM_TO_LOAD) {
+          console.log(`[VanSpot] Map settled at zoom ${zoom} — loading spots`);
+          loadSpotsForBounds(MapView.getBounds());
+        } else {
+          console.log(`[VanSpot] Map settled at zoom ${zoom} — below minimum ${MIN_ZOOM_TO_LOAD}, not loading`);
+        }
+      }
+    }, 200);
   }
 
   async function loadSpotsForBounds(bounds) {
@@ -62,12 +86,15 @@ const Main = (() => {
   }
 
   function onMapMoved() {
-    if (!activated) return; // ignore all movement until user navigates intentionally
+    if (!activated) {
+      console.log('[VanSpot] Map moved but not yet activated — search or use locate to begin');
+      return;
+    }
     clearTimeout(moveDebounce);
     moveDebounce = setTimeout(() => {
       const zoom = MapView.getZoom();
       if (zoom < MIN_ZOOM_TO_LOAD) {
-        console.log(`[VanSpot] Zoom ${zoom} — need ${MIN_ZOOM_TO_LOAD}+ to load spots`);
+        console.log(`[VanSpot] Zoom ${zoom} — zoom in to at least ${MIN_ZOOM_TO_LOAD} to load spots`);
         MapView.clearSpots();
         UI.renderResults([], null);
         return;
@@ -94,7 +121,9 @@ const Main = (() => {
     // Restore from URL hash if present — counts as intentional navigation
     const restored = Search.restoreFromHash();
     if (restored) {
-      activate();
+      // restoreFromHash calls flyTo via setTimeout(200ms); activate() polls
+      // until the animation settles before fetching
+      setTimeout(() => activate(), 250);
     } else {
       UI.showWelcome();
       console.log('[VanSpot] Waiting for user to search or use locate before loading spots.');

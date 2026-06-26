@@ -46,12 +46,10 @@ const MapView = (() => {
     cellLayer.addTo(map);
     overlapLayer.addTo(map);
 
-    // Only fire after map has fully settled — suppress the burst of moveend
-    // events Leaflet emits during invalidateSize on startup
-    let mapReady = false;
-    setTimeout(() => { mapReady = true; }, 1200);
+    // activated gate in main.js blocks all moveend handling until the user
+    // intentionally navigates — no separate mapReady timer needed
     map.on('moveend', () => {
-      if (mapReady && typeof Main !== 'undefined') Main.onMapMoved();
+      if (typeof Main !== 'undefined') Main.onMapMoved();
     });
   }
 
