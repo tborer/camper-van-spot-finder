@@ -5,6 +5,7 @@ const Filters = (() => {
     freeOnly: true,
     showCamping: true,
     showParking: true,
+    showRestAreas: true,
     minSignal: 'none',
     hasFacilities: false,
     hasStayLimit: false,
@@ -34,8 +35,9 @@ const Filters = (() => {
   function applyFilters(spots) {
     return spots.filter(s => {
       if (state.freeOnly && !s.free) return false;
-      if (!state.showCamping && s.type === 'campsite') return false;
-      if (!state.showParking && s.type === 'parking') return false;
+      if (!state.showCamping && (s.type === 'campsite' || s.type === 'overlanding')) return false;
+      if (!state.showParking && (s.type === 'parking' || s.type === 'picnic_area')) return false;
+      if (!state.showRestAreas && (s.type === 'rest_area')) return false;
       if (SIGNAL_RANK[s.signalStrength] < SIGNAL_RANK[state.minSignal]) return false;
       if (state.hasFacilities && !s.facilities?.toilets && !s.facilities?.water) return false;
       if (state.hasStayLimit && !s.stayLimitDays) return false;
