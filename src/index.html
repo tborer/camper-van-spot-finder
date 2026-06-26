@@ -46,6 +46,18 @@
         <div id="map-controls">
           <button id="btn-share" title="Share this view">🔗 Share</button>
         </div>
+        <div id="map-legend">
+          <div class="legend-title">Pin colors</div>
+          <div class="legend-row"><span class="legend-dot" style="background:#22c55e"></span> Free + fair/strong signal</div>
+          <div class="legend-row"><span class="legend-dot" style="background:#f59e0b"></span> Free · no signal data</div>
+          <div class="legend-row"><span class="legend-dot" style="background:#3b82f6"></span> Campsite</div>
+          <div class="legend-row"><span class="legend-dot" style="background:#9ca3af"></span> Paid parking</div>
+          <div class="legend-title" style="margin-top:6px">Signal (stub data until CI runs)</div>
+          <div class="legend-row signal-strong">📶 Strong — 5+ towers within 2 km</div>
+          <div class="legend-row signal-fair">📶 Fair — 2–4 towers within 2 km</div>
+          <div class="legend-row signal-weak">📶 Weak — 1 tower within 2 km</div>
+          <div class="legend-row signal-none">🚫 None — no tower data nearby</div>
+        </div>
       </div>
 
       <aside id="sidebar">
@@ -53,6 +65,7 @@
           <button class="filter-chip active" data-filter="freeOnly" data-type="toggle">Free only</button>
           <button class="filter-chip active" data-filter="showParking" data-type="toggle">Parking</button>
           <button class="filter-chip active" data-filter="showCamping" data-type="toggle">Camping</button>
+          <button class="filter-chip active" data-filter="showRestAreas" data-type="toggle">Rest areas</button>
           <button class="filter-chip" data-filter="hasFacilities" data-type="toggle">Facilities</button>
           <button class="filter-chip" data-filter="hasStayLimit" data-type="toggle">Stay limit</button>
         </div>

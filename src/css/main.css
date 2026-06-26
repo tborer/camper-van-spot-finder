@@ -143,6 +143,17 @@ body { font-family: system-ui, -apple-system, sans-serif; font-size: 14px; color
 }
 .detail-links a:hover { background: #2563eb; }
 
+/* Map legend */
+#map-legend {
+  position: absolute; bottom: 24px; right: 12px; z-index: 1000;
+  background: rgba(255,255,255,.93); border: 1px solid #e5e7eb;
+  border-radius: 8px; padding: 10px 12px; font-size: 11px;
+  box-shadow: 0 2px 8px rgba(0,0,0,.12); min-width: 210px;
+}
+.legend-title { font-weight: 700; color: #374151; margin-bottom: 4px; font-size: 11px; }
+.legend-row { display: flex; align-items: center; gap: 6px; margin-bottom: 3px; color: #4b5563; }
+.legend-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; border: 1.5px solid #fff; box-shadow: 0 1px 2px rgba(0,0,0,.3); }
+
 /* Footer */
 #page-footer {
   padding: 12px 16px; border-top: 1px solid #e5e7eb;

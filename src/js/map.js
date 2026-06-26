@@ -15,6 +15,12 @@ const MapView = (() => {
     return 'gray';
   }
 
+  // Tooltip label shown on hover
+  function pinLabel(spot) {
+    const sig = { strong: '📶 Strong', fair: '📶 Fair', weak: '📶 Weak', none: 'No signal data' }[spot.signalStrength];
+    return `<b>${spot.name}</b><br>${spot.type} · ${spot.free ? 'Free' : 'Paid'}<br>${sig}`;
+  }
+
   function makeIcon(color) {
     return L.divIcon({
       className: '',
@@ -48,6 +54,7 @@ const MapView = (() => {
   function addSpotMarker(spot) {
     const color = pinColor(spot);
     const marker = L.marker([spot.lat, spot.lng], { icon: makeIcon(PIN_COLORS[color]) });
+    marker.bindTooltip(pinLabel(spot), { direction: 'top', offset: [0, -10] });
     marker.on('click', () => {
       if (typeof UI !== 'undefined') UI.showDetailPanel(spot);
     });
