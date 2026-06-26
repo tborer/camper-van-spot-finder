@@ -143,6 +143,25 @@ body { font-family: system-ui, -apple-system, sans-serif; font-size: 14px; color
 }
 .detail-links a:hover { background: #2563eb; }
 
+/* Map prompt overlay — shown on startup until user navigates */
+#map-prompt {
+  position: absolute; inset: 0; z-index: 900;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(15, 23, 42, 0.45);
+  pointer-events: none; /* let map still be panned under the overlay */
+}
+#map-prompt.hidden { display: none; }
+#map-prompt-card {
+  background: #fff; border-radius: 16px; padding: 28px 32px;
+  text-align: center; max-width: 340px;
+  box-shadow: 0 8px 32px rgba(0,0,0,.2);
+  pointer-events: none;
+}
+.prompt-icon { font-size: 36px; margin-bottom: 10px; }
+#map-prompt-card h2 { font-size: 18px; color: #111827; margin-bottom: 8px; }
+#map-prompt-card p { font-size: 14px; color: #4b5563; line-height: 1.5; margin-bottom: 6px; }
+.prompt-sub { font-size: 12px; color: #9ca3af; margin-bottom: 0 !important; }
+
 /* Map legend */
 #map-legend {
   position: absolute; bottom: 24px; right: 12px; z-index: 1000;

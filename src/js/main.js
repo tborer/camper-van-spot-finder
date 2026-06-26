@@ -1,5 +1,16 @@
 const Main = (() => {
   let moveDebounce = null;
+  let activated = false; // true once user has intentionally navigated somewhere
+
+  const MIN_ZOOM_TO_LOAD = 9;
+
+  function activate() {
+    if (!activated) {
+      activated = true;
+      document.getElementById('map-prompt')?.classList.add('hidden');
+      console.log('[VanSpot] Activated — will now load spots on map moves');
+    }
+  }
 
   async function loadSpotsForBounds(bounds) {
     UI.showLoading();
@@ -33,8 +44,7 @@ const Main = (() => {
         (removedByFilter ? ` (${removedByFilter} hidden by active filters)` : ''));
 
       if (filtered.length === 0 && deduped.length > 0) {
-        console.warn('[VanSpot] All spots were filtered out. Check your active filters — ' +
-          '"Free only" may be hiding paid parking in this area. Try toggling it off.');
+        console.warn('[VanSpot] All spots were filtered out — check active filters.');
       }
 
       MapView.clearSpots();
@@ -51,14 +61,13 @@ const Main = (() => {
     }
   }
 
-  const MIN_ZOOM_TO_LOAD = 9;
-
   function onMapMoved() {
+    if (!activated) return; // ignore all movement until user navigates intentionally
     clearTimeout(moveDebounce);
     moveDebounce = setTimeout(() => {
       const zoom = MapView.getZoom();
       if (zoom < MIN_ZOOM_TO_LOAD) {
-        console.log(`[VanSpot] Zoom ${zoom} — zoom in to at least ${MIN_ZOOM_TO_LOAD} to load spots`);
+        console.log(`[VanSpot] Zoom ${zoom} — need ${MIN_ZOOM_TO_LOAD}+ to load spots`);
         MapView.clearSpots();
         UI.renderResults([], null);
         return;
@@ -68,7 +77,7 @@ const Main = (() => {
   }
 
   function refresh() {
-    loadSpotsForBounds(MapView.getBounds());
+    if (activated) loadSpotsForBounds(MapView.getBounds());
   }
 
   async function start() {
@@ -79,31 +88,33 @@ const Main = (() => {
 
     await CellSignal.init();
     const cellStatus = CellSignal.getStatus();
-    console.log(`[VanSpot] Cell signal status: ${cellStatus.status} (${cellStatus.towerCount.toLocaleString()} towers)`);
+    console.log(`[VanSpot] Cell signal: ${cellStatus.status} (${cellStatus.towerCount.toLocaleString()} towers)`);
     MapView.renderCellHeatmap(CellSignal.getCellGeoJSON());
 
-    const startZoom = MapView.getZoom();
-    if (startZoom >= MIN_ZOOM_TO_LOAD) {
-      console.log('[VanSpot] Initial spot load…');
-      loadSpotsForBounds(MapView.getBounds());
+    // Restore from URL hash if present — counts as intentional navigation
+    const restored = Search.restoreFromHash();
+    if (restored) {
+      activate();
     } else {
-      console.log(`[VanSpot] Start zoom ${startZoom} — zoom in to ${MIN_ZOOM_TO_LOAD}+ to load spots`);
+      UI.showWelcome();
+      console.log('[VanSpot] Waiting for user to search or use locate before loading spots.');
     }
   }
 
-  // Expose a debug helper callable from the browser console: VanSpot.debug()
   window.VanSpot = {
     debug() {
       console.group('VanSpot debug info');
+      console.log('Activated:', activated);
       console.log('Cell signal:', CellSignal.getStatus());
       console.log('Active filters:', Filters.getState());
       console.log('Map bounds:', MapView.getBounds());
+      console.log('Zoom:', MapView.getZoom());
       console.groupEnd();
     },
-    reload() { loadSpotsForBounds(MapView.getBounds()); },
+    reload() { if (activated) loadSpotsForBounds(MapView.getBounds()); },
   };
 
   document.addEventListener('DOMContentLoaded', start);
 
-  return { onMapMoved, refresh };
+  return { onMapMoved, refresh, activate, loadSpotsForBounds };
 })();

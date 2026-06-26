@@ -78,6 +78,11 @@ const UI = (() => {
   function showLoading() { document.getElementById('loading-indicator')?.classList.remove('hidden'); }
   function hideLoading() { document.getElementById('loading-indicator')?.classList.add('hidden'); }
 
+  function showWelcome() {
+    document.getElementById('results-list').innerHTML =
+      '<p class="empty-state">Search for a location above<br>or tap 📍 to use your location.</p>';
+  }
+
   function renderResults(spots, mapCenter) {
     const list = document.getElementById('results-list');
     if (!spots.length) {
@@ -162,5 +167,5 @@ const UI = (() => {
     return String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 
-  return { init, showLoading, hideLoading, renderResults, showDetailPanel, hideDetailPanel };
+  return { init, showLoading, hideLoading, showWelcome, renderResults, showDetailPanel, hideDetailPanel };
 })();

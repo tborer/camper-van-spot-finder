@@ -26,8 +26,6 @@ const Search = (() => {
     });
 
     locateBtn.addEventListener('click', geolocate);
-
-    restoreFromHash();
   }
 
   async function autocomplete(query) {
@@ -62,6 +60,7 @@ const Search = (() => {
   function selectResult(r) {
     document.getElementById('search-input').value = r.display_name;
     hideDropdown();
+    Main.activate();
     MapView.flyTo(parseFloat(r.lat), parseFloat(r.lon), 11);
     saveToHash();
   }
@@ -75,6 +74,7 @@ const Search = (() => {
   function geolocate() {
     if (!navigator.geolocation) { alert('Geolocation not supported.'); return; }
     navigator.geolocation.getCurrentPosition(pos => {
+      Main.activate();
       MapView.flyTo(pos.coords.latitude, pos.coords.longitude, 12);
       saveToHash();
     }, () => alert('Could not get your location.'));
@@ -88,18 +88,21 @@ const Search = (() => {
     history.replaceState(null, '', hash);
   }
 
+  // Returns true if a valid location was restored (signals intentional navigation)
   function restoreFromHash() {
     const hash = location.hash.slice(1);
-    if (!hash) return;
+    if (!hash) return false;
     const [coords] = hash.split('?');
     const parts = coords.split(',');
     if (parts.length >= 2) {
       const lat = parseFloat(parts[0]), lng = parseFloat(parts[1]);
       if (!isNaN(lat) && !isNaN(lng)) {
         setTimeout(() => MapView.flyTo(lat, lng, parseInt(parts[2]) || 10), 200);
+        return true;
       }
     }
+    return false;
   }
 
-  return { init, saveToHash };
+  return { init, saveToHash, restoreFromHash };
 })();
