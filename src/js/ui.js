@@ -38,6 +38,15 @@ const UI = (() => {
       });
     }
 
+    // Legend toggle
+    const legendToggle = document.getElementById('legend-toggle');
+    const legendBody = document.getElementById('legend-body');
+    legendToggle?.addEventListener('click', () => {
+      const open = !legendBody.classList.contains('hidden');
+      legendBody.classList.toggle('hidden', open);
+      legendToggle.textContent = open ? '? Legend' : '▲ Legend';
+    });
+
     // Layer toggle
     document.getElementById('btn-layers')?.addEventListener('click', () => {
       const panel = document.getElementById('layer-panel');
