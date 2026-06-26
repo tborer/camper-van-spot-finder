@@ -2,8 +2,8 @@ const Overpass = (() => {
   function buildQuery(bounds) {
     const { south, west, north, east } = bounds;
     const bb = `${south},${west},${north},${east}`;
-    // Note: ["fee"!="yes"] matches elements where fee tag is absent OR not "yes"
-    // This is intentional — most free parking in OSM has no fee tag at all
+    // ["fee"!="yes"] matches elements where the fee tag is absent OR not "yes"
+    // Most free parking in OSM has no fee tag at all — absence means free
     return `[out:json][timeout:40];
 (
   node["tourism"="camp_site"]["fee"!="yes"](${bb});
@@ -23,14 +23,14 @@ const Overpass = (() => {
   node["amenity"="overnight_parking"](${bb});
   way["amenity"="overnight_parking"](${bb});
 );
-out center tags;`;
+out center;`;
   }
 
   function normalize(el) {
     const tags = el.tags || {};
     const lat = el.lat ?? el.center?.lat;
     const lng = el.lon ?? el.center?.lon;
-    if (!lat || !lng) return null;
+    if (lat == null || lng == null) return null;
 
     const type = (tags.tourism === 'camp_site' || tags.amenity === 'camping')
       ? 'campsite'
@@ -69,17 +69,44 @@ out center tags;`;
 
   async function fetchSpots(bounds) {
     const query = buildQuery(bounds);
+    const url = CONFIG.OVERPASS_API_URL;
+    console.log(`[Overpass] Querying ${url} for bounds:`, bounds);
+    console.log('[Overpass] Query:', query);
+
     try {
-      const res = await fetch(CONFIG.OVERPASS_API_URL, {
+      const res = await fetch(url, {
         method: 'POST',
         body: `data=${encodeURIComponent(query)}`,
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       });
-      if (!res.ok) throw new Error(`Overpass HTTP ${res.status}`);
+
+      if (!res.ok) {
+        const body = await res.text().catch(() => '');
+        console.error(`[Overpass] HTTP ${res.status} — ${body.slice(0, 300)}`);
+        return [];
+      }
+
       const json = await res.json();
-      return json.elements.map(normalize).filter(Boolean);
+
+      if (json.remark) console.warn('[Overpass] Server remark:', json.remark);
+
+      const raw = json.elements || [];
+      const spots = raw.map(normalize).filter(Boolean);
+      const dropped = raw.length - spots.length;
+
+      console.log(`[Overpass] ${raw.length} elements returned → ${spots.length} normalized` +
+        (dropped ? ` (${dropped} dropped — missing lat/lng)` : ''));
+
+      const byType = spots.reduce((acc, s) => { acc[s.type] = (acc[s.type] || 0) + 1; return acc; }, {});
+      console.log('[Overpass] By type:', byType);
+
+      return spots;
     } catch (err) {
-      console.warn('Overpass fetch failed:', err.message);
+      if (err.name === 'AbortError' || err.message.includes('timeout')) {
+        console.error('[Overpass] Request timed out — try zooming in to a smaller area');
+      } else {
+        console.error('[Overpass] Fetch failed:', err.message, err);
+      }
       return [];
     }
   }
