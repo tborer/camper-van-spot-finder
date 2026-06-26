@@ -38,8 +38,13 @@ jobs:
         run: node scripts/build-cell-data.js
         env:
           # Set OPENCELLID_API_KEY in repo Settings → Secrets & variables → Actions
-          # If the secret is absent the script falls back to stub data automatically
+          # If absent the script writes stub data and the build continues
           OPENCELLID_API_KEY: ${{ secrets.OPENCELLID_API_KEY }}
+
+      - name: Build iOverlander spot data
+        run: node scripts/build-ioverlander-data.js
+        # No secret needed — public API fetched server-side to avoid browser CORS block
+        # Build continues even if iOverlander is unreachable (script writes empty file)
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
