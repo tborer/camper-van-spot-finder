@@ -3,6 +3,7 @@ name: Deploy VanSpot to GitHub Pages
 on:
   push:
     branches: [main]
+  workflow_dispatch: # allow manual trigger from GitHub UI
 
 permissions:
   contents: read
@@ -19,6 +20,7 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -27,19 +29,22 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: 'npm'
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci --ignore-scripts || npm install
 
       - name: Build cell tower data
         run: node scripts/build-cell-data.js
         env:
-          OPENCELLID_API_KEY: ${{ secrets.OPENCELLID_API_KEY || 'STUB_OPENCELLID_KEY' }}
+          # Set OPENCELLID_API_KEY in repo Settings → Secrets & variables → Actions
+          # If the secret is absent the script falls back to stub data automatically
+          OPENCELLID_API_KEY: ${{ secrets.OPENCELLID_API_KEY }}
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
 
-      - name: Upload artifact
+      - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: src/
