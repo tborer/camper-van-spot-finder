@@ -38,6 +38,15 @@ const UI = (() => {
       });
     }
 
+    // Legend toggle
+    const legendToggle = document.getElementById('legend-toggle');
+    const legendBody = document.getElementById('legend-body');
+    legendToggle?.addEventListener('click', () => {
+      const open = !legendBody.classList.contains('hidden');
+      legendBody.classList.toggle('hidden', open);
+      legendToggle.textContent = open ? '? Legend' : '▲ Legend';
+    });
+
     // Layer toggle
     document.getElementById('btn-layers')?.addEventListener('click', () => {
       const panel = document.getElementById('layer-panel');
@@ -72,7 +81,7 @@ const UI = (() => {
   function renderResults(spots, mapCenter) {
     const list = document.getElementById('results-list');
     if (!spots.length) {
-      list.innerHTML = '<p class="empty-state">No spots found in this area.<br>Try zooming out or adjusting filters.</p>';
+      list.innerHTML = '<p class="empty-state">No spots found in this area.<br>Try zooming in further, or adjust your filters.</p>';
       return;
     }
 

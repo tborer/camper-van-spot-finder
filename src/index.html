@@ -47,16 +47,19 @@
           <button id="btn-share" title="Share this view">🔗 Share</button>
         </div>
         <div id="map-legend">
-          <div class="legend-title">Pin colors</div>
-          <div class="legend-row"><span class="legend-dot" style="background:#22c55e"></span> Free + fair/strong signal</div>
-          <div class="legend-row"><span class="legend-dot" style="background:#f59e0b"></span> Free · no signal data</div>
-          <div class="legend-row"><span class="legend-dot" style="background:#3b82f6"></span> Campsite</div>
-          <div class="legend-row"><span class="legend-dot" style="background:#9ca3af"></span> Paid parking</div>
-          <div class="legend-title" style="margin-top:6px">Signal (stub data until CI runs)</div>
-          <div class="legend-row signal-strong">📶 Strong — 5+ towers within 2 km</div>
-          <div class="legend-row signal-fair">📶 Fair — 2–4 towers within 2 km</div>
-          <div class="legend-row signal-weak">📶 Weak — 1 tower within 2 km</div>
-          <div class="legend-row signal-none">🚫 None — no tower data nearby</div>
+          <button id="legend-toggle" title="Map legend">? Legend</button>
+          <div id="legend-body" class="hidden">
+            <div class="legend-title">Pin colors</div>
+            <div class="legend-row"><span class="legend-dot" style="background:#22c55e"></span> Free + fair/strong signal</div>
+            <div class="legend-row"><span class="legend-dot" style="background:#f59e0b"></span> Free · no signal data</div>
+            <div class="legend-row"><span class="legend-dot" style="background:#3b82f6"></span> Campsite</div>
+            <div class="legend-row"><span class="legend-dot" style="background:#9ca3af"></span> Paid parking</div>
+            <div class="legend-title" style="margin-top:8px">Cell signal</div>
+            <div class="legend-row signal-strong">📶 Strong — 5+ towers within 2 km</div>
+            <div class="legend-row signal-fair">📶 Fair — 2–4 towers within 2 km</div>
+            <div class="legend-row signal-weak">📶 Weak — 1 tower within 2 km</div>
+            <div class="legend-row signal-none">🚫 None — no tower data nearby</div>
+          </div>
         </div>
       </div>
 

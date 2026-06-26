@@ -51,9 +51,20 @@ const Main = (() => {
     }
   }
 
+  const MIN_ZOOM_TO_LOAD = 9;
+
   function onMapMoved() {
     clearTimeout(moveDebounce);
-    moveDebounce = setTimeout(() => loadSpotsForBounds(MapView.getBounds()), 500);
+    moveDebounce = setTimeout(() => {
+      const zoom = MapView.getZoom();
+      if (zoom < MIN_ZOOM_TO_LOAD) {
+        console.log(`[VanSpot] Zoom ${zoom} — zoom in to at least ${MIN_ZOOM_TO_LOAD} to load spots`);
+        MapView.clearSpots();
+        UI.renderResults([], null);
+        return;
+      }
+      loadSpotsForBounds(MapView.getBounds());
+    }, 1000);
   }
 
   function refresh() {
@@ -71,8 +82,13 @@ const Main = (() => {
     console.log(`[VanSpot] Cell signal status: ${cellStatus.status} (${cellStatus.towerCount.toLocaleString()} towers)`);
     MapView.renderCellHeatmap(CellSignal.getCellGeoJSON());
 
-    console.log('[VanSpot] Initial spot load…');
-    loadSpotsForBounds(MapView.getBounds());
+    const startZoom = MapView.getZoom();
+    if (startZoom >= MIN_ZOOM_TO_LOAD) {
+      console.log('[VanSpot] Initial spot load…');
+      loadSpotsForBounds(MapView.getBounds());
+    } else {
+      console.log(`[VanSpot] Start zoom ${startZoom} — zoom in to ${MIN_ZOOM_TO_LOAD}+ to load spots`);
+    }
   }
 
   // Expose a debug helper callable from the browser console: VanSpot.debug()
