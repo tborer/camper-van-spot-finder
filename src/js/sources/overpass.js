@@ -67,48 +67,68 @@ out center;`;
     };
   }
 
+  // Minimum zoom before querying — below this the bounding box is too large
+  const MIN_ZOOM = 9;
+  // Retry delays (ms) on 429 Too Many Requests
+  const RETRY_DELAYS = [2000, 5000, 10000];
+
   async function fetchSpots(bounds) {
-    const query = buildQuery(bounds);
-    const url = CONFIG.OVERPASS_API_URL;
-    console.log(`[Overpass] Querying ${url} for bounds:`, bounds);
-    console.log('[Overpass] Query:', query);
-
-    try {
-      const res = await fetch(url, {
-        method: 'POST',
-        body: `data=${encodeURIComponent(query)}`,
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      });
-
-      if (!res.ok) {
-        const body = await res.text().catch(() => '');
-        console.error(`[Overpass] HTTP ${res.status} — ${body.slice(0, 300)}`);
-        return [];
-      }
-
-      const json = await res.json();
-
-      if (json.remark) console.warn('[Overpass] Server remark:', json.remark);
-
-      const raw = json.elements || [];
-      const spots = raw.map(normalize).filter(Boolean);
-      const dropped = raw.length - spots.length;
-
-      console.log(`[Overpass] ${raw.length} elements returned → ${spots.length} normalized` +
-        (dropped ? ` (${dropped} dropped — missing lat/lng)` : ''));
-
-      const byType = spots.reduce((acc, s) => { acc[s.type] = (acc[s.type] || 0) + 1; return acc; }, {});
-      console.log('[Overpass] By type:', byType);
-
-      return spots;
-    } catch (err) {
-      if (err.name === 'AbortError' || err.message.includes('timeout')) {
-        console.error('[Overpass] Request timed out — try zooming in to a smaller area');
-      } else {
-        console.error('[Overpass] Fetch failed:', err.message, err);
-      }
+    const zoom = typeof MapView !== 'undefined' ? MapView.getZoom() : 99;
+    if (zoom < MIN_ZOOM) {
+      console.log(`[Overpass] Skipping query — zoom ${zoom} is below minimum ${MIN_ZOOM}. Zoom in to load spots.`);
       return [];
     }
+
+    const query = buildQuery(bounds);
+    const url = CONFIG.OVERPASS_API_URL;
+    console.log(`[Overpass] Querying (zoom ${zoom}) for bounds:`, bounds);
+
+    for (let attempt = 0; attempt <= RETRY_DELAYS.length; attempt++) {
+      try {
+        const res = await fetch(url, {
+          method: 'POST',
+          body: `data=${encodeURIComponent(query)}`,
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        });
+
+        if (res.status === 429) {
+          const retryDelay = RETRY_DELAYS[attempt];
+          if (retryDelay) {
+            console.warn(`[Overpass] Rate limited (429). Retrying in ${retryDelay / 1000}s… (attempt ${attempt + 1}/${RETRY_DELAYS.length})`);
+            await new Promise(r => setTimeout(r, retryDelay));
+            continue;
+          } else {
+            console.error('[Overpass] Rate limited (429) — all retries exhausted. Wait a minute before panning.');
+            return [];
+          }
+        }
+
+        if (!res.ok) {
+          const body = await res.text().catch(() => '');
+          console.error(`[Overpass] HTTP ${res.status} — ${body.slice(0, 300)}`);
+          return [];
+        }
+
+        const json = await res.json();
+        if (json.remark) console.warn('[Overpass] Server remark (may indicate timeout):', json.remark);
+
+        const raw = json.elements || [];
+        const spots = raw.map(normalize).filter(Boolean);
+        const dropped = raw.length - spots.length;
+
+        console.log(`[Overpass] ${raw.length} elements → ${spots.length} spots` +
+          (dropped ? ` (${dropped} dropped — missing coords)` : ''));
+
+        const byType = spots.reduce((acc, s) => { acc[s.type] = (acc[s.type] || 0) + 1; return acc; }, {});
+        if (spots.length) console.log('[Overpass] By type:', byType);
+
+        return spots;
+      } catch (err) {
+        console.error('[Overpass] Fetch error:', err.message);
+        return [];
+      }
+    }
+    return [];
   }
 
   return { fetchSpots };

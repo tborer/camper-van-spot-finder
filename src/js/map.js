@@ -46,8 +46,12 @@ const MapView = (() => {
     cellLayer.addTo(map);
     overlapLayer.addTo(map);
 
+    // Only fire after map has fully settled — suppress the burst of moveend
+    // events Leaflet emits during invalidateSize on startup
+    let mapReady = false;
+    setTimeout(() => { mapReady = true; }, 1200);
     map.on('moveend', () => {
-      if (typeof Main !== 'undefined') Main.onMapMoved();
+      if (mapReady && typeof Main !== 'undefined') Main.onMapMoved();
     });
   }
 
@@ -101,6 +105,7 @@ const MapView = (() => {
   }
 
   function getCenter() { return map.getCenter(); }
+  function getZoom() { return map.getZoom(); }
 
   function toggleLayer(name, visible) {
     const layer = { cell: cellLayer, overlap: overlapLayer }[name];
@@ -108,5 +113,5 @@ const MapView = (() => {
     if (visible) map.addLayer(layer); else map.removeLayer(layer);
   }
 
-  return { init, addSpotMarker, clearSpots, renderCellHeatmap, renderOverlapZones, flyTo, getBounds, getCenter, toggleLayer };
+  return { init, addSpotMarker, clearSpots, renderCellHeatmap, renderOverlapZones, flyTo, getBounds, getCenter, getZoom, toggleLayer };
 })();

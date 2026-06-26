@@ -81,7 +81,7 @@ const UI = (() => {
   function renderResults(spots, mapCenter) {
     const list = document.getElementById('results-list');
     if (!spots.length) {
-      list.innerHTML = '<p class="empty-state">No spots found in this area.<br>Try zooming out or adjusting filters.</p>';
+      list.innerHTML = '<p class="empty-state">No spots found in this area.<br>Try zooming in further, or adjust your filters.</p>';
       return;
     }
 
