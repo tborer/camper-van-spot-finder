@@ -1,8 +1,42 @@
 const Overpass = (() => {
+  const MIN_ZOOM = 9;
+  const RETRY_DELAYS = [2000, 5000, 10000];
+
+  // Tile-based result cache — snaps bounds to 0.25° grid cells, TTL 10 min
+  const TILE_SIZE = 0.25;
+  const CACHE_TTL = 10 * 60 * 1000;
+  const MAX_CACHE_ENTRIES = 60;
+  const cache = new Map();
+
+  function tileKey(bounds, zoom) {
+    const snapLat = (Math.floor(bounds.south / TILE_SIZE) * TILE_SIZE).toFixed(2);
+    const snapLng = (Math.floor(bounds.west / TILE_SIZE) * TILE_SIZE).toFixed(2);
+    return `${snapLat},${snapLng},${zoom}`;
+  }
+
+  function getCached(bounds, zoom) {
+    const entry = cache.get(tileKey(bounds, zoom));
+    if (!entry) return null;
+    if (Date.now() - entry.ts > CACHE_TTL) { cache.delete(tileKey(bounds, zoom)); return null; }
+    return entry.spots;
+  }
+
+  function setCache(bounds, zoom, spots) {
+    if (cache.size >= MAX_CACHE_ENTRIES) {
+      // Evict oldest entry
+      const oldest = [...cache.entries()].sort((a, b) => a[1].ts - b[1].ts)[0];
+      cache.delete(oldest[0]);
+    }
+    cache.set(tileKey(bounds, zoom), { spots, ts: Date.now() });
+  }
+
+  // AbortController for the in-flight request — cancel on next call
+  let currentController = null;
+
   function buildQuery(bounds) {
     const { south, west, north, east } = bounds;
     const bb = `${south},${west},${north},${east}`;
-    // ["fee"!="yes"] matches elements where the fee tag is absent OR not "yes"
+    // ["fee"!="yes"] matches elements where fee tag is absent OR not "yes"
     // Most free parking in OSM has no fee tag at all — absence means free
     return `[out:json][timeout:40];
 (
@@ -67,40 +101,49 @@ out center;`;
     };
   }
 
-  // Minimum zoom before querying — below this the bounding box is too large
-  const MIN_ZOOM = 9;
-  // Retry delays (ms) on 429 Too Many Requests
-  const RETRY_DELAYS = [2000, 5000, 10000];
-
   async function fetchSpots(bounds) {
     const zoom = typeof MapView !== 'undefined' ? MapView.getZoom() : 99;
     if (zoom < MIN_ZOOM) {
-      console.log(`[Overpass] Skipping query — zoom ${zoom} is below minimum ${MIN_ZOOM}. Zoom in to load spots.`);
+      console.log(`[Overpass] Skipping — zoom ${zoom} < minimum ${MIN_ZOOM}`);
       return [];
     }
 
+    // Return cached result if viewport snaps to same tile and cache is fresh
+    const cached = getCached(bounds, zoom);
+    if (cached) {
+      console.log(`[Overpass] Cache hit (${cached.length} spots) — key: ${tileKey(bounds, zoom)}`);
+      return cached;
+    }
+
+    // Cancel any in-flight request before starting a new one
+    if (currentController) {
+      currentController.abort();
+      console.log('[Overpass] Cancelled previous in-flight request');
+    }
+    currentController = new AbortController();
+    const { signal } = currentController;
+
     const query = buildQuery(bounds);
-    const url = CONFIG.OVERPASS_API_URL;
-    console.log(`[Overpass] Querying (zoom ${zoom}) for bounds:`, bounds);
+    console.log(`[Overpass] Fetching (zoom ${zoom}, tile ${tileKey(bounds, zoom)})`);
 
     for (let attempt = 0; attempt <= RETRY_DELAYS.length; attempt++) {
       try {
-        const res = await fetch(url, {
+        const res = await fetch(CONFIG.OVERPASS_API_URL, {
           method: 'POST',
           body: `data=${encodeURIComponent(query)}`,
           headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          signal,
         });
 
         if (res.status === 429) {
-          const retryDelay = RETRY_DELAYS[attempt];
-          if (retryDelay) {
-            console.warn(`[Overpass] Rate limited (429). Retrying in ${retryDelay / 1000}s… (attempt ${attempt + 1}/${RETRY_DELAYS.length})`);
-            await new Promise(r => setTimeout(r, retryDelay));
+          const delay = RETRY_DELAYS[attempt];
+          if (delay) {
+            console.warn(`[Overpass] Rate limited. Retrying in ${delay / 1000}s (attempt ${attempt + 1}/${RETRY_DELAYS.length})…`);
+            await new Promise(r => setTimeout(r, delay));
             continue;
-          } else {
-            console.error('[Overpass] Rate limited (429) — all retries exhausted. Wait a minute before panning.');
-            return [];
           }
+          console.error('[Overpass] Rate limited — all retries exhausted. Wait before panning.');
+          return [];
         }
 
         if (!res.ok) {
@@ -110,20 +153,24 @@ out center;`;
         }
 
         const json = await res.json();
-        if (json.remark) console.warn('[Overpass] Server remark (may indicate timeout):', json.remark);
+        if (json.remark) console.warn('[Overpass] Server remark:', json.remark);
 
         const raw = json.elements || [];
         const spots = raw.map(normalize).filter(Boolean);
         const dropped = raw.length - spots.length;
-
         console.log(`[Overpass] ${raw.length} elements → ${spots.length} spots` +
-          (dropped ? ` (${dropped} dropped — missing coords)` : ''));
-
-        const byType = spots.reduce((acc, s) => { acc[s.type] = (acc[s.type] || 0) + 1; return acc; }, {});
+          (dropped ? ` (${dropped} dropped — no coords)` : ''));
+        const byType = spots.reduce((a, s) => { a[s.type] = (a[s.type] || 0) + 1; return a; }, {});
         if (spots.length) console.log('[Overpass] By type:', byType);
 
+        setCache(bounds, zoom, spots);
         return spots;
+
       } catch (err) {
+        if (err.name === 'AbortError') {
+          console.log('[Overpass] Request aborted — superseded by newer pan');
+          return [];
+        }
         console.error('[Overpass] Fetch error:', err.message);
         return [];
       }
