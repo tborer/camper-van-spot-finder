@@ -1,0 +1,35 @@
+@media (max-width: 767px) {
+  #main-layout { flex-direction: column; }
+
+  #map-container { height: 60vh; }
+
+  #sidebar {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    height: 40vh; width: 100%;
+    border-top: 1px solid #e5e7eb; border-left: none;
+    transform: translateY(100%); transition: transform .3s ease;
+    z-index: 1500;
+  }
+  #sidebar.open { transform: translateY(0); }
+
+  #btn-sidebar-toggle {
+    display: block;
+    position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%);
+    z-index: 1600; padding: 10px 24px;
+    background: #3b82f6; color: #fff; border: none;
+    border-radius: 24px; font-size: 14px; font-weight: 600;
+    box-shadow: 0 4px 12px rgba(0,0,0,.2); cursor: pointer;
+  }
+  #sidebar.open ~ #btn-sidebar-toggle { display: none; }
+
+  #detail-panel {
+    width: 100%; top: auto; bottom: 0; right: 0;
+    height: 70vh; transform: translateY(100%);
+    border-left: none; border-top: 1px solid #e5e7eb;
+  }
+  #detail-panel.open { transform: translateY(0); }
+
+  #ad-footer ins { width: 320px !important; height: 50px !important; }
+
+  #layer-panel { right: 8px; top: 56px; }
+}

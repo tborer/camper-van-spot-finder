@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VanSpot — Free Camping &amp; Cell Coverage Map</title>
+  <meta name="description" content="Find free camping and parking spots with strong cell signal for van life and campervan travel.">
+  <meta property="og:title" content="VanSpot — Free Camping &amp; Cell Coverage Map">
+  <meta property="og:description" content="Overlay free overnight parking with cell tower coverage. Built for van lifers.">
+  <meta property="og:type" content="website">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://YOURUSERNAME.github.io/vanspot/">
+
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.Default.css">
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/mobile.css">
+
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=STUB_ADSENSE_ID" crossorigin="anonymous"></script>
+</head>
+<body>
+  <div id="app">
+    <header id="top-bar">
+      <div id="logo">🚐 VanSpot</div>
+      <div id="search-bar">
+        <input id="search-input" type="search" placeholder="Search city, state, or address…" autocomplete="off">
+        <ul id="search-dropdown" class="hidden"></ul>
+      </div>
+      <div id="top-bar-actions">
+        <button id="btn-locate" title="My Location">📍</button>
+        <button id="btn-layers" title="Toggle layers">🗺</button>
+      </div>
+    </header>
+
+    <div id="layer-panel" class="hidden">
+      <label><input type="checkbox" class="layer-toggle" data-layer="cell" checked> Cell towers</label>
+      <label><input type="checkbox" class="layer-toggle" data-layer="overlap" checked> Good-signal zones</label>
+    </div>
+
+    <div id="loading-indicator" class="hidden">Loading spots…</div>
+
+    <div id="main-layout">
+      <div id="map-container">
+        <div id="map"></div>
+        <div id="map-controls">
+          <button id="btn-share" title="Share this view">🔗 Share</button>
+        </div>
+      </div>
+
+      <aside id="sidebar">
+        <div id="filter-bar">
+          <button class="filter-chip active" data-filter="freeOnly" data-type="toggle">Free only</button>
+          <button class="filter-chip active" data-filter="showParking" data-type="toggle">Parking</button>
+          <button class="filter-chip active" data-filter="showCamping" data-type="toggle">Camping</button>
+          <button class="filter-chip" data-filter="hasFacilities" data-type="toggle">Facilities</button>
+          <button class="filter-chip" data-filter="hasStayLimit" data-type="toggle">Stay limit</button>
+        </div>
+        <div id="signal-filter">
+          <label for="signal-slider">Min signal: <span id="signal-label">none</span></label>
+          <input id="signal-slider" type="range" min="0" max="3" value="0" step="1">
+        </div>
+        <div id="results-list"></div>
+        <div id="ad-sidebar">
+          <p class="ad-label">Advertisement</p>
+          <ins class="adsbygoogle"
+               style="display:block;width:300px;height:250px"
+               data-ad-client="STUB_ADSENSE_ID"
+               data-ad-slot="STUB_SLOT_SIDEBAR"></ins>
+        </div>
+      </aside>
+    </div>
+
+    <div id="detail-panel" class="hidden">
+      <button id="detail-close">✕</button>
+      <div id="detail-content"></div>
+    </div>
+
+    <!-- Mobile sidebar toggle -->
+    <button id="btn-sidebar-toggle">☰ Spots</button>
+
+    <footer id="page-footer">
+      <p>Data: <a href="https://www.openstreetmap.org/" target="_blank" rel="noopener">OpenStreetMap</a> contributors · iOverlander · OpenCelliD · FreeCampsites.net</p>
+      <div id="ad-footer">
+        <ins class="adsbygoogle"
+             style="display:block;width:728px;height:90px"
+             data-ad-client="STUB_ADSENSE_ID"
+             data-ad-slot="STUB_SLOT_FOOTER"></ins>
+      </div>
+    </footer>
+  </div>
+
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/dedup.js"></script>
+  <script src="js/sources/overpass.js"></script>
+  <script src="js/sources/iOverlander.js"></script>
+  <script src="js/sources/freecampsites.js"></script>
+  <script src="js/sources/cellSignal.js"></script>
+  <script src="js/filters.js"></script>
+  <script src="js/search.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/map.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

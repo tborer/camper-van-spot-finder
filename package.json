@@ -1,0 +1,12 @@
+{
+  "name": "vanspot",
+  "version": "1.0.0",
+  "description": "Free camping and parking spots with cell coverage overlay",
+  "scripts": {
+    "build-cell-data": "node scripts/build-cell-data.js",
+    "serve": "npx serve src"
+  },
+  "devDependencies": {
+    "serve": "^14.0.0"
+  }
+}
