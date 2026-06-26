@@ -62,7 +62,6 @@ const Search = (() => {
     hideDropdown();
     Main.activate();
     MapView.flyTo(parseFloat(r.lat), parseFloat(r.lon), 11);
-    saveToHash();
   }
 
   function hideDropdown() {
@@ -76,33 +75,8 @@ const Search = (() => {
     navigator.geolocation.getCurrentPosition(pos => {
       Main.activate();
       MapView.flyTo(pos.coords.latitude, pos.coords.longitude, 12);
-      saveToHash();
     }, () => alert('Could not get your location.'));
   }
 
-  function saveToHash() {
-    const c = MapView.getCenter();
-    const filters = Filters.getState();
-    const hash = `#${c.lat.toFixed(4)},${c.lng.toFixed(4)},${MapView.getBounds ? '' : ''}` +
-      `?f=${encodeURIComponent(JSON.stringify(filters))}`;
-    history.replaceState(null, '', hash);
-  }
-
-  // Returns true if a valid location was restored (signals intentional navigation)
-  function restoreFromHash() {
-    const hash = location.hash.slice(1);
-    if (!hash) return false;
-    const [coords] = hash.split('?');
-    const parts = coords.split(',');
-    if (parts.length >= 2) {
-      const lat = parseFloat(parts[0]), lng = parseFloat(parts[1]);
-      if (!isNaN(lat) && !isNaN(lng)) {
-        setTimeout(() => MapView.flyTo(lat, lng, parseInt(parts[2]) || 10), 200);
-        return true;
-      }
-    }
-    return false;
-  }
-
-  return { init, saveToHash, restoreFromHash };
+  return { init };
 })();
