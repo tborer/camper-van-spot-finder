@@ -57,11 +57,13 @@ body { font-family: system-ui, -apple-system, sans-serif; font-size: 14px; color
 #map-controls {
   position: absolute; bottom: 24px; left: 12px; z-index: 1000;
   display: flex; flex-direction: column; gap: 6px;
+  pointer-events: auto;
 }
 #map-controls button {
   padding: 7px 12px; background: #fff; border: 1px solid #e5e7eb;
   border-radius: 6px; cursor: pointer; font-size: 13px;
   box-shadow: 0 2px 6px rgba(0,0,0,.1);
+  pointer-events: auto;
 }
 #map-controls button:hover { background: #f3f4f6; }
 
@@ -143,10 +145,30 @@ body { font-family: system-ui, -apple-system, sans-serif; font-size: 14px; color
 }
 .detail-links a:hover { background: #2563eb; }
 
+/* Map prompt overlay — shown on startup until user navigates */
+#map-prompt {
+  position: absolute; inset: 0; z-index: 900;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(15, 23, 42, 0.45);
+  pointer-events: none; /* let map still be panned under the overlay */
+}
+#map-prompt.hidden { display: none; }
+#map-prompt-card {
+  background: #fff; border-radius: 16px; padding: 28px 32px;
+  text-align: center; max-width: 340px;
+  box-shadow: 0 8px 32px rgba(0,0,0,.2);
+  pointer-events: none;
+}
+.prompt-icon { font-size: 36px; margin-bottom: 10px; }
+#map-prompt-card h2 { font-size: 18px; color: #111827; margin-bottom: 8px; }
+#map-prompt-card p { font-size: 14px; color: #4b5563; line-height: 1.5; margin-bottom: 6px; }
+.prompt-sub { font-size: 12px; color: #9ca3af; margin-bottom: 0 !important; }
+
 /* Map legend */
 #map-legend {
   position: absolute; bottom: 24px; right: 12px; z-index: 1000;
   font-size: 11px;
+  pointer-events: auto; /* Leaflet swallows clicks on overlaid elements without this */
 }
 #legend-toggle {
   display: flex; align-items: center; gap: 5px;
@@ -155,6 +177,7 @@ body { font-family: system-ui, -apple-system, sans-serif; font-size: 14px; color
   cursor: pointer; font-size: 12px; font-weight: 600; color: #374151;
   box-shadow: 0 2px 6px rgba(0,0,0,.12);
   white-space: nowrap;
+  pointer-events: auto;
 }
 #legend-toggle:hover { background: #f9fafb; }
 #legend-body {
@@ -162,6 +185,7 @@ body { font-family: system-ui, -apple-system, sans-serif; font-size: 14px; color
   border: 1px solid #e5e7eb; border-radius: 8px;
   padding: 10px 12px; min-width: 215px;
   box-shadow: 0 2px 8px rgba(0,0,0,.12);
+  pointer-events: auto;
 }
 .legend-title { font-weight: 700; color: #374151; margin-bottom: 4px; font-size: 11px; }
 .legend-row { display: flex; align-items: center; gap: 6px; margin-bottom: 3px; color: #4b5563; }
