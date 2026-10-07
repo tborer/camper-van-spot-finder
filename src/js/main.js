@@ -40,13 +40,12 @@ const Main = (() => {
     UI.showLoading();
     console.group(`[VanSpot] Loading spots for bounds`, bounds);
     try {
-      const [osmSpots, iOverlanderSpots, freeCampSpots] = await Promise.all([
+      const [osmSpots, freeCampSpots] = await Promise.all([
         Overpass.fetchSpots(bounds),
-        IOverlander.fetchSpots(bounds),
         FreeCampsites.fetchSpots(bounds),
       ]);
 
-      const combined = [...osmSpots, ...iOverlanderSpots, ...freeCampSpots];
+      const combined = [...osmSpots, ...freeCampSpots];
       console.log(`[VanSpot] Combined from all sources: ${combined.length} spots`);
 
       const deduped = deduplicateSpots(combined);

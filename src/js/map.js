@@ -34,7 +34,7 @@ const MapView = (() => {
     map = L.map('map', { zoomControl: true }).setView([39.5, -98.35], 5);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors · iOverlander · OpenCelliD · FreeCampsites.net',
+      attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors · OpenCelliD · FreeCampsites.net',
       maxZoom: 19,
     }).addTo(map);
 
