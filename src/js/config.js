@@ -3,8 +3,6 @@ const CONFIG = {
   OPENCELLID_API_KEY: 'STUB_OPENCELLID_KEY',
   // OpenSignal — apply at: https://www.opensignal.com/api
   OPENSIGNAL_API_KEY: 'STUB_OPENSIGNAL_KEY',
-  // iOverlander — no key needed currently, direct REST API
-  IOVERLANDER_BASE_URL: 'https://www.ioverlander.com/places.json',
   // Nominatim (OSM geocoder) — no key needed
   NOMINATIM_USER_AGENT: 'VanSpot/1.0 (your@email.com)',
   // Overpass API — no key needed

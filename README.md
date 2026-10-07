@@ -5,15 +5,15 @@
 VanSpot is a browser-based map for van lifers, campervan travellers and remote
 workers who need two things at once: somewhere free to park overnight, and
 enough cell signal to actually get work done. It pulls overnight-friendly spots
-from several open data sources, cross-references each one against an OpenCelliD
+from OpenStreetMap, cross-references each one against an OpenCelliD
 cell tower dataset, and highlights the places where "free to stay" and "usable
 signal" overlap.
 
 It is a static site — plain HTML, CSS and vanilla JavaScript with
 [Leaflet](https://leafletjs.com/) for mapping. There is no backend and no build
-step for the app itself; the only server-side work happens in CI, where two Node
-scripts pre-bake the cell tower and iOverlander datasets into static files
-before the site is deployed to GitHub Pages.
+step for the app itself; the only server-side work happens in CI, where a Node
+script pre-bakes the cell tower dataset into a static file before the site is
+deployed to GitHub Pages.
 
 ---
 
@@ -23,8 +23,7 @@ before the site is deployed to GitHub Pages.
 
 - **Multi-source spot search.** Overnight parking, campsites, rest areas and
   picnic areas are pulled live from the OpenStreetMap
-  [Overpass API](https://overpass-api.de/), and combined with community spots
-  from iOverlander that are pre-fetched during CI.
+  [Overpass API](https://overpass-api.de/).
 - **Location search with autocomplete.** Type a city, state or address and pick
   from Nominatim (OpenStreetMap geocoder) suggestions.
 - **Use my location.** One tap to jump the map to your current GPS position.
@@ -108,13 +107,11 @@ src/
   js/filters.js            # Filter state, persistence, predicate logic
   js/dedup.js              # Geohash encoder, Levenshtein, cross-source merge
   js/sources/overpass.js   # OpenStreetMap live query, cache, retries
-  js/sources/iOverlander.js# Pre-baked community spots, filtered to bounds
   js/sources/cellSignal.js # Tower data load and signal-strength scoring
   js/sources/freecampsites.js # Stub — not yet wired up
   data/                    # Generated datasets (see below)
 scripts/
   build-cell-data.js       # OpenCelliD CSV → GeoJSON, US MCCs 310–316
-  build-ioverlander-data.js# iOverlander US/Canada fetch → static JSON
 .github/workflows/deploy.yml # Build data, deploy src/ to GitHub Pages
 ```
 
@@ -128,8 +125,8 @@ npm run serve      # serves src/ via npx serve
 ```
 
 Then open the URL it prints. The app works immediately against the live
-Overpass and Nominatim APIs; the cell tower and iOverlander layers will be empty
-until you generate their data files.
+Overpass and Nominatim APIs; the cell tower layer will be empty until you
+generate its data file.
 
 To generate the cell tower dataset locally:
 
@@ -140,14 +137,8 @@ npm run build-cell-data
 
 Without a key the script writes a small stub file (a handful of city
 coordinates) and the build continues — every spot will just show
-`signal: none`. Both build scripts skip work when their output is still fresh
-(7 days for cell towers, 3 days for iOverlander).
-
-To generate the iOverlander dataset:
-
-```bash
-node scripts/build-ioverlander-data.js
-```
+`signal: none`. The build script skips work when its output is less than 7
+days old.
 
 ---
 
@@ -161,7 +152,6 @@ the repository are placeholders:
 | `OPENCELLID_API_KEY` | Cell tower downloads (read by the CI script from the environment, not the browser) | Yes, for real signal data |
 | `OVERPASS_API_URL` | OpenStreetMap spot queries | No key required |
 | `NOMINATIM_USER_AGENT` | Identifies the app to the OSM geocoder — set a real contact address | Should be changed |
-| `IOVERLANDER_BASE_URL` | Community spot source used by the CI script | No key required |
 | `FREECAMPSITES_API_KEY` / `_BASE_URL` | FreeCampsites.net integration | Stubbed, see below |
 | `ADSENSE_PUBLISHER_ID`, `ADSENSE_SLOT_*` | Ad units in the sidebar and footer | Optional |
 
@@ -172,7 +162,6 @@ the repository are placeholders:
 | Source | How it's fetched | Licence / notes |
 | --- | --- | --- |
 | [OpenStreetMap](https://www.openstreetmap.org/) via Overpass | Live, per viewport | © OpenStreetMap contributors (ODbL) |
-| [iOverlander](https://www.ioverlander.com/) | Pre-fetched in CI, served as static JSON | Community-contributed |
 | [OpenCelliD](https://opencellid.org/) | Downloaded in CI, converted to GeoJSON | Free API key required |
 | [Nominatim](https://nominatim.openstreetmap.org/) | Live, for search autocomplete | Usage policy applies — set a real user agent |
 | FreeCampsites.net | Not yet implemented | See below |
@@ -182,16 +171,14 @@ the repository are placeholders:
 ## Deployment
 
 Pushing to `main` triggers `.github/workflows/deploy.yml`, which installs
-dependencies, runs both data build scripts, and publishes `src/` to GitHub
+dependencies, runs the cell tower data build script, and publishes `src/` to GitHub
 Pages. Set `OPENCELLID_API_KEY` under **Settings → Secrets and variables →
 Actions** for real tower data; the workflow still succeeds without it, falling
 back to stub data. The workflow can also be run manually via
 **workflow_dispatch**.
 
 Generated data is deliberately kept out of git: `src/data/cell-towers.geojson`
-is gitignored entirely (too large, always regenerated), while
-`src/data/ioverlander-spots.json` is committed as an empty placeholder so the
-app doesn't 404 before CI overwrites it.
+is gitignored entirely (too large, always regenerated).
 
 ---
 
@@ -207,7 +194,7 @@ app doesn't 404 before CI overwrites it.
   actual throughput. Treat it as a hint, not a guarantee.
 - **Coverage is US-centric.** The cell tower build covers the continental US
   (MCCs 310–316, excluding Alaska and Hawaii for size), and search autocomplete
-  is restricted to US results. iOverlander data covers the US and Canada.
+  is restricted to US results.
 - **AdSense slots are placeholders** and render nothing until a real publisher
   ID is configured.
 
